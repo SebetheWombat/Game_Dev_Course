@@ -233,13 +233,8 @@ function love.update(dt)
     -- paddles can move no matter what state we're in
     --
     -- player 1
-    if love.keyboard.isDown('w') then
-        player1.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('s') then
-        player1.dy = PADDLE_SPEED
-    else
-        player1.dy = 0
-    end
+    --[[ Moved player 1's logic to inside gameState== 'play' conditional
+     so computer will only track ball during gameplay]]
 
     -- player 2
     if love.keyboard.isDown('up') then
@@ -253,7 +248,20 @@ function love.update(dt)
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then
+        -- Computer controlled paddle only needs to move when ball is headed towards it
+        if ball.dx < 0 then
+            -- Adjust location of paddle based on center height of ball. (A 1D collision detection)
+            if (ball.y + ball.height/2) < (player1.y) then
+                player1.dy = -PADDLE_SPEED
+            elseif (ball.y + ball.height/2) > (player1.y + player1.height) then
+                player1.dy = PADDLE_SPEED
+            else
+                player1.dy = 0
+            end
+        end
+
         ball:update(dt)
+
     end
 
     player1:update(dt)
