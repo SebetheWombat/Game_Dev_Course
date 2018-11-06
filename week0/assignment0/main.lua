@@ -114,6 +114,7 @@ function love.load()
     -- 3. 'play' (the ball is in play, bouncing between paddles)
     -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
+    singlePlayer = false
 end
 
 --[[
@@ -233,8 +234,27 @@ function love.update(dt)
     -- paddles can move no matter what state we're in
     --
     -- player 1
-    --[[ Moved player 1's logic to inside gameState== 'play' conditional
-     so computer will only track ball during gameplay]]
+    -- if single player mode have computer control paddle
+    -- otherwise have paddle controlled by w and s keys
+    if singlePlayer then
+        if ball.dx < 0 then
+            if (ball.y + ball.height/2) < (player1.y) then
+                player1.dy = -PADDLE_SPEED
+            elseif (ball.y + ball.height/2) > (player1.y + player1.height) then
+                player1.dy = PADDLE_SPEED
+            else
+                player1.dy = 0
+            end
+        end
+    else
+        if love.keyboard.isDown('w') then
+            player1.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('s') then
+            player1.dy = PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
+    end
 
     -- player 2
     if love.keyboard.isDown('up') then
@@ -248,20 +268,7 @@ function love.update(dt)
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then
-        -- Computer controlled paddle only needs to move when ball is headed towards it
-        if ball.dx < 0 then
-            -- Adjust location of paddle based on center height of ball. (A 1D collision detection)
-            if (ball.y + ball.height/2) < (player1.y) then
-                player1.dy = -PADDLE_SPEED
-            elseif (ball.y + ball.height/2) > (player1.y + player1.height) then
-                player1.dy = PADDLE_SPEED
-            else
-                player1.dy = 0
-            end
-        end
-
         ball:update(dt)
-
     end
 
     player1:update(dt)
@@ -279,6 +286,11 @@ function love.keypressed(key)
     if key == 'escape' then
         -- the function LÖVE2D uses to quit the application
         love.event.quit()
+    elseif gameState == 'start' then
+        if key == '1' then
+            singlePlayer = true
+        end
+        gameState = 'serve'
     -- if we press enter during either the start or serve phase, it should
     -- transition to the next appropriate state
     elseif key == 'enter' or key == 'return' then
@@ -322,7 +334,7 @@ function love.draw()
         -- UI messages
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Select number of players! Enter "1" or "2"', 0, 20, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         -- UI messages
         love.graphics.setFont(smallFont)
